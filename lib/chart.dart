@@ -61,8 +61,7 @@ class BorrowPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-//                pass overdraft
-                OverdraftChart(overdraft: 580000, diameter: 214,),
+                OverdraftChart(diameter: 214,),
               ],
             ),
           ),
@@ -112,15 +111,9 @@ class BorrowPage extends StatelessWidget {
 }
 // draw our chart
 class OverdraftChart extends StatelessWidget {
-  static const int _maxOverdraft = 3000000;
   final double diameter;
-  final int overdraft;
-  const OverdraftChart({Key key, this.overdraft = 1, this.diameter = 200}) : super(key: key);
 
-  _countPercent(overdraft) {
-    if (overdraft > _maxOverdraft || overdraft == 0) return overdraft = 100 / _maxOverdraft;
-    return ((overdraft * 100) / _maxOverdraft);
-  }
+  const OverdraftChart({Key key, this.diameter = 200}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +121,8 @@ class OverdraftChart extends StatelessWidget {
       painter: PaintGaugeChart(
           lineColor: Color.fromRGBO(234, 234, 234, 1),
           completeColor: Color.fromRGBO(106, 106, 106, 1),
-          completePercent: _countPercent(overdraft),
+//          PASS overdraft
+          overdraft: 300000,
           width: 20.0
       ),
       size: Size(diameter, diameter),
@@ -136,12 +130,18 @@ class OverdraftChart extends StatelessWidget {
   }
 }
 
-class PaintGaugeChart extends CustomPainter{
+class PaintGaugeChart extends CustomPainter {
+  static const int _maxOverdraft = 3000000;
   Color lineColor;
   Color completeColor;
-  double completePercent;
   double width;
-  PaintGaugeChart({this.lineColor,this.completeColor,this.completePercent,this.width});
+  final int overdraft;
+  PaintGaugeChart({this.lineColor,this.completeColor,this.overdraft,this.width});
+
+  _countPercent(overdraft) {
+    if (overdraft > _maxOverdraft || overdraft == 0) return overdraft = 100 / _maxOverdraft;
+    return ((overdraft * 100) / _maxOverdraft);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -166,7 +166,7 @@ class PaintGaugeChart extends CustomPainter{
         baseLine
     );
 
-    double arcAngle = 2*pi* (completePercent/140);
+    double arcAngle = 2*pi* (_countPercent(overdraft)/140);
     canvas.drawArc(
         Rect.fromCircle(center: center,radius: radius),
         pi/1.25,
@@ -176,7 +176,8 @@ class PaintGaugeChart extends CustomPainter{
     );
 // TextInside chart
     drawText(canvas, size, 'Unlocked overdraft');
-    drawOverdraft(canvas, size, '30,000');
+//    add commas to overdraft
+    drawOverdraft(canvas, size, overdraft.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'));
 
 //  points in chart
     drawPoint(canvas, size, -20.0, 160.0, '0');
@@ -220,7 +221,7 @@ class PaintGaugeChart extends CustomPainter{
   void drawOverdraft(Canvas canvas, Size size, String text) {
     textPainter.text = TextSpan(style: textOverdraftStyle, text: text);
     textPainter.layout();
-    textPainter.paint(canvas, Offset(65, size.height - 110));
+    textPainter.paint(canvas, Offset(60, size.height - 110));
   }
 
   @override
