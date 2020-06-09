@@ -122,7 +122,7 @@ class OverdraftChart extends StatelessWidget {
           lineColor: Color.fromRGBO(234, 234, 234, 1),
           completeColor: Color.fromRGBO(106, 106, 106, 1),
 //          PASS overdraft
-          overdraft: 300000,
+          overdraft: 650000,
           width: 20.0
       ),
       size: Size(diameter, diameter),
@@ -136,6 +136,8 @@ class PaintGaugeChart extends CustomPainter {
   Color completeColor;
   double width;
   final int overdraft;
+  double offset;
+
   PaintGaugeChart({this.lineColor,this.completeColor,this.overdraft,this.width});
 
   _countPercent(overdraft) {
@@ -176,8 +178,29 @@ class PaintGaugeChart extends CustomPainter {
     );
 // TextInside chart
     drawText(canvas, size, 'Unlocked overdraft');
-//    add commas to overdraft
-    drawOverdraft(canvas, size, overdraft.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'));
+
+//    add commas to overdraft and offset for drawing
+    switch (overdraft.toString().length) {
+      case 3:
+        offset = 80.0;
+        break;
+      case 4:
+        offset = 70.0;
+        break;
+      case 5:
+        offset = 60.0;
+        break;
+      case 6:
+        offset = 55.0;
+        break;
+      case 7:
+        offset = 45.0;
+        break;
+      default:
+        offset = 85;
+        break;
+    }
+    drawOverdraft(offset, canvas, size, overdraft.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'));
 
 //  points in chart
     drawPoint(canvas, size, -20.0, 160.0, '0');
@@ -190,7 +213,7 @@ class PaintGaugeChart extends CustomPainter {
   }
 
   final TextPainter textPainter = TextPainter(
-    textDirection: TextDirection.ltr,
+    textDirection: TextDirection.rtl,
     textAlign: TextAlign.center,
   );
 
@@ -218,10 +241,10 @@ class PaintGaugeChart extends CustomPainter {
     textPainter.layout();
     textPainter.paint(canvas, Offset(40, size.height - 130));
   }
-  void drawOverdraft(Canvas canvas, Size size, String text) {
+  void drawOverdraft(offset, Canvas canvas, Size size, String text) {
     textPainter.text = TextSpan(style: textOverdraftStyle, text: text);
     textPainter.layout();
-    textPainter.paint(canvas, Offset(60, size.height - 110));
+    textPainter.paint(canvas, Offset(offset, size.height - 110));
   }
 
   @override
